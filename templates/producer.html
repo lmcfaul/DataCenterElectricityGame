@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Producer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        .main-content, .timeline {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            padding: 20px;
+        }
+        .main-content {
+            flex: 3;
+            min-width: 600px;
+        }
+        .timeline {
+            flex: 1;
+            min-width: 200px;
+            border-left: 4px solid #4CAF50;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f4f4f9;
+            cursor: pointer;
+        }
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        ul li.current {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .decline-button {
+            background-color: #f44336;
+            margin-left: 10px;
+        }
+        .decline-button:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <h1>Electricity Producer</h1>
+            
+            <label>User ID:</label>
+            <input type="text" id="user_id" placeholder="Enter ID" value="{{ name }}" readonly>
+
+            <label>Year:</label>
+            <input type="text" id="year" value="{{ current_year }}" readonly>
+
+            <label>Season:</label>
+            <input type="text" id="season" value="{{ current_season }}" readonly>
+
+            <h2>Your Power Plants (Each 100 MW)</h2>
+            <table>
+                <tr>
+                    <th>Plant</th>
+                    <th>Marginal Cost</th>
+                    <th>Period 1 Bid</th>
+                    <th>Period 2 Bid</th>
+                    <th>Period 3 Bid</th>
+                    <th>Period 4 Bid</th>
+                </tr>
+                <tr>
+                    <td>Plant 1</td>
+                    <td>$10</td>
+                    <td><input type="number" id="bid_plant_1_period_1" value="10"></td>
+                    <td><input type="number" id="bid_plant_1_period_2" value="10"></td>
+                    <td><input type="number" id="bid_plant_1_period_3" value="10"></td>
+                    <td><input type="number" id="bid_plant_1_period_4" value="10"></td>
+                </tr>
+                <tr>
+                    <td>Plant 2</td>
+                    <td>$25</td>
+                    <td><input type="number" id="bid_plant_2_period_1" value="25"></td>
+                    <td><input type="number" id="bid_plant_2_period_2" value="25"></td>
+                    <td><input type="number" id="bid_plant_2_period_3" value="25"></td>
+                    <td><input type="number" id="bid_plant_2_period_4" value="25"></td>
+                </tr>
+                <tr>
+                    <td>Plant 3</td>
+                    <td>$45</td>
+                    <td><input type="number" id="bid_plant_3_period_1" value="45"></td>
+                    <td><input type="number" id="bid_plant_3_period_2" value="45"></td>
+                    <td><input type="number" id="bid_plant_3_period_3" value="45"></td>
+                    <td><input type="number" id="bid_plant_3_period_4" value="45"></td>
+                </tr>
+                <tr>
+                    <td>Plant 4</td>
+                    <td>$90</td>
+                    <td><input type="number" id="bid_plant_4_period_1" value="90"></td>
+                    <td><input type="number" id="bid_plant_4_period_2" value="90"></td>
+                    <td><input type="number" id="bid_plant_4_period_3" value="90"></td>
+                    <td><input type="number" id="bid_plant_4_period_4" value="90"></td>
+                </tr>
+                <tr>
+                    <td>Plant 5</td>
+                    <td>$90</td>
+                    <td><input type="number" id="bid_plant_5_period_1" value="90"></td>
+                    <td><input type="number" id="bid_plant_5_period_2" value="90"></td>
+                    <td><input type="number" id="bid_plant_5_period_3" value="90"></td>
+                    <td><input type="number" id="bid_plant_5_period_4" value="90"></td>
+                </tr>
+            </table>
+
+            <h2>Total Demand for Each Period</h2>
+            <ul>
+                <li>Period 1: 800 MW</li>
+                <li>Period 2: 1200 MW</li>
+                <li>Period 3: 1600 MW</li>
+                <li>Period 4: 1000 MW</li>
+            </ul>
+
+            <button onclick="submitBids()">Submit Bids</button>
+
+            <h2>Received Offers</h2>
+            <table id="offers_table">
+                <tr>
+                    <th>Data Center ID</th>
+                    <th>Year</th>
+                    <th>Price</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </table>
+
+            <h2>Clearing Prices</h2>
+            <table id="clearing_prices_table">
+                <tr>
+                    <th>Year</th>
+                    <th>Season</th>
+                    <th>Period 1</th>
+                    <th>Period 2</th>
+                    <th>Period 3</th>
+                    <th>Period 4</th>
+                </tr>
+            </table>
+
+            <h2>Power Plants that Produced in Auction</h2>
+            <table id="produced_plants_table">
+                <tr>
+                    <th>Plant</th>
+                    <th>Period 1</th>
+                    <th>Period 2</th>
+                    <th>Period 3</th>
+                    <th>Period 4</th>
+                </tr>
+            </table>
+
+            <h2>Profits</h2>
+            <table id="profits_table">
+                <tr>
+                    <th>Producer</th>
+                    <th>Profits</th>
+                </tr>
+            </table>
+        </div>
+        <div class="timeline">
+            <h2>Timeline</h2>
+            <ul id="timeline">
+                <li>Year 1 - Summer</li>
+                <li>Year 1 - Winter</li>
+                <li>Year 2 - Summer</li>
+                <li>Year 2 - Winter</li>
+                <li>Year 3 - Summer</li>
+                <li>Year 3 - Winter</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        var socket = io.connect("http://10.35.49.20:5001");
+
+        function submitBids() {
+            if (confirm("You can only submit bids once per season. Are you sure you want to submit these bids?")) {
+                var user_id = document.getElementById("user_id").value;
+                var year = document.getElementById("year").value;
+                var season = document.getElementById("season").value;
+                var bids = [
+                    { plant: "Plant 1", marginal_cost: 10, period_1: document.getElementById("bid_plant_1_period_1").value, period_2: document.getElementById("bid_plant_1_period_2").value, period_3: document.getElementById("bid_plant_1_period_3").value, period_4: document.getElementById("bid_plant_1_period_4").value },
+                    { plant: "Plant 2", marginal_cost: 25, period_1: document.getElementById("bid_plant_2_period_1").value, period_2: document.getElementById("bid_plant_2_period_2").value, period_3: document.getElementById("bid_plant_2_period_3").value, period_4: document.getElementById("bid_plant_2_period_4").value },
+                    { plant: "Plant 3", marginal_cost: 45, period_1: document.getElementById("bid_plant_3_period_1").value, period_2: document.getElementById("bid_plant_3_period_2").value, period_3: document.getElementById("bid_plant_3_period_3").value, period_4: document.getElementById("bid_plant_3_period_4").value },
+                    { plant: "Plant 4", marginal_cost: 90, period_1: document.getElementById("bid_plant_4_period_1").value, period_2: document.getElementById("bid_plant_4_period_2").value, period_3: document.getElementById("bid_plant_4_period_3").value, period_4: document.getElementById("bid_plant_4_period_4").value },
+                    { plant: "Plant 5", marginal_cost: 90, period_1: document.getElementById("bid_plant_5_period_1").value, period_2: document.getElementById("bid_plant_5_period_2").value, period_3: document.getElementById("bid_plant_5_period_3").value, period_4: document.getElementById("bid_plant_5_period_4").value }
+                ];
+                var bid_data = [];
+                bids.forEach(function(bid) {
+                    for (var period = 1; period <= 4; period++) {
+                        bid_data.push({
+                            user_id: user_id,
+                            year: year,
+                            season: season,
+                            period: period,
+                            plant: bid.plant,
+                            marginal_cost: bid.marginal_cost,
+                            bid: bid["period_" + period]
+                        });
+                    }
+                });
+                console.log("Submitting bids with data:", bid_data);
+                fetch('/submit_bids', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ bids: bid_data })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Bids submitted successfully:", data);
+                })
+                .catch(error => {
+                    console.error("Error submitting bids:", error);
+                });
+            }
+        }
+
+        // Listen for bid updates
+        socket.on("update_bids", function(data) {
+            var bid_list = document.getElementById("bid_list");
+            bid_list.innerHTML = "";  // Clear list
+            for (var user in data) {
+                var li = document.createElement("li");
+                li.innerText = user + ": " + JSON.stringify(data[user]);
+                bid_list.appendChild(li);
+            }
+        });
+
+        // Function to fetch the current year and season
+        function fetchCurrentYearAndSeason() {
+            fetch('/get_database')
+            .then(response => response.json())
+            .then(data => {
+                var global_state = data.global_state;
+                document.getElementById("year").value = global_state.current_year;
+                document.getElementById("season").value = global_state.current_season;
+
+                var timeline = document.getElementById("timeline");
+                var items = timeline.getElementsByTagName("li");
+
+                // Clear current highlight
+                for (var i = 0; i < items.length; i++) {
+                items[i].classList.remove("current");
+                }
+
+                // Highlight the current period
+                for (var i = 0; i < items.length; i++) {
+                if (items[i].innerText === `Year ${global_state.current_year} - ${global_state.current_season}`) {
+                    items[i].classList.add("current");
+                    break;
+                }
+                }
+
+
+
+                // Count the number of accepted offers for the producer in the current year
+                var producer_name = document.getElementById("user_id").value;
+                var current_year = global_state.current_year;
+                var accepted_offers = data.offers.filter(offer => offer.user_id_producer === producer_name && offer.status === "accepted" && offer.year === current_year).length;
+
+
+
+
+
+                // Clear current highlight for all rows
+                for (var i = 1; i <= 5; i++) {
+                    var plantRow = document.querySelector(`tr:nth-child(${i + 1})`); // Adjust for header row and zero-based index
+                    if (plantRow) {
+                        plantRow.style.backgroundColor = "";
+                    }
+                }
+
+                // Highlight the rows of the power plants and lock the bids based on the number of accepted offers in the current year
+                for (var i = 1; i <= 5; i++) {
+                    if (accepted_offers >= i) {
+                        var plantRow = document.querySelector(`tr:nth-child(${i + 1})`); // Adjust for header row and zero-based index
+                        if (plantRow) {
+                            plantRow.style.backgroundColor = "lightcoral";
+                            for (var j = 1; j <= 4; j++) {
+                                var bidCell = document.getElementById(`bid_plant_${i}_period_${j}`);
+                                if (bidCell) {
+                                    bidCell.value = 9999;
+                                }
+                            }
+                        }
+                    }
+                }        
+
+
+
+
+
+                // Display a table with the clearing prices for each period for each season for each year
+                var clearing_prices_table = document.getElementById("clearing_prices_table");
+                clearing_prices_table.innerHTML = `
+                <tr>
+                    <th>Year</th>
+                    <th>Season</th>
+                    <th>Period 1</th>
+                    <th>Period 2</th>
+                    <th>Period 3</th>
+                    <th>Period 4</th>
+                </tr>
+                `;  // Reset table headers
+
+                var prices = {};
+                data.prices.forEach(function(price) {
+                var key = `${price.year}-${price.season}`;
+                if (!prices[key]) {
+                    prices[key] = { period_1: "", period_2: "", period_3: "", period_4: "" };
+                }
+                prices[key][`period_${price.period}`] = `${price.MWs} MW @ $${price.price}`;
+                });
+
+                for (var key in prices) {
+                var row = clearing_prices_table.insertRow();
+                var [year, season] = key.split("-");
+                row.insertCell(0).innerText = year;
+                row.insertCell(1).innerText = season;
+                row.insertCell(2).innerText = prices[key].period_1;
+                row.insertCell(3).innerText = prices[key].period_2;
+                row.insertCell(4).innerText = prices[key].period_3;
+                row.insertCell(5).innerText = prices[key].period_4;
+                }
+
+                // Display a table with the power plants that produced during each period
+                var produced_plants_table = document.getElementById("produced_plants_table");
+                produced_plants_table.innerHTML = `
+                <tr>
+                    <th>Plant</th>
+                    <th>Period 1</th>
+                    <th>Period 2</th>
+                    <th>Period 3</th>
+                    <th>Period 4</th>
+                </tr>
+                `;  // Reset table headers
+
+                var plants = {};
+                data.bids.forEach(function(bid) {
+                if (bid.user_id === document.getElementById("user_id").value && bid.year === global_state.current_year && bid.season === global_state.current_season) {
+                    if (!plants[bid.plant]) {
+                    plants[bid.plant] = { period_1: "No", period_2: "No", period_3: "No", period_4: "No" };
+                    }
+                    plants[bid.plant][`period_${bid.period}`] = bid.run_bool ? "Yes" : "No";
+                }
+                });
+
+                for (var plant in plants) {
+                var row = produced_plants_table.insertRow();
+                row.insertCell(0).innerText = plant;
+                row.insertCell(1).innerText = plants[plant].period_1;
+                row.insertCell(2).innerText = plants[plant].period_2;
+                row.insertCell(3).innerText = plants[plant].period_3;
+                row.insertCell(4).innerText = plants[plant].period_4;
+                }
+
+                // Display a table with the profits of each producer
+                var profits_table = document.getElementById("profits_table");
+                profits_table.innerHTML = `
+                <tr>
+                    <th>Producer</th>
+                    <th>Profits</th>
+                </tr>
+                `;  // Reset table headers
+
+                data.producers.forEach(function(user) {
+                var row = profits_table.insertRow();
+                row.insertCell(0).innerText = user.user_id;
+                row.insertCell(1).innerText = user.profits;
+                });
+
+                // Fetch and populate the offers table
+                var user_id = document.getElementById("user_id").value;
+                var offers = data.offers.filter(offer => offer.user_id_producer === user_id);
+                var offers_table = document.getElementById("offers_table");
+                offers_table.innerHTML = `
+                <tr>
+                    <th>Data Center ID</th>
+                    <th>Year</th>
+                    <th>Price</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                `; // Clear existing rows
+                offers.forEach(offer => {
+                var row = offers_table.insertRow();
+                row.insertCell(0).innerText = offer.user_id_datacenter;
+                row.insertCell(1).innerText = offer.year;
+                row.insertCell(2).innerText = offer.price;
+                row.insertCell(3).innerText = offer.message;
+                row.insertCell(4).innerText = offer.status;
+                var actionCell = row.insertCell(5);
+                if (offer.status === "pending") {
+                    var acceptButton = document.createElement("button");
+                    acceptButton.innerText = "Accept Offer";
+                    acceptButton.onclick = function() {
+                    acceptOffer(offer.id);
+                    };
+                    actionCell.appendChild(acceptButton);
+
+                    var declineButton = document.createElement("button");
+                    declineButton.innerText = "Decline Offer";
+                    declineButton.className = "decline-button";
+                    declineButton.onclick = function() {
+                    declineOffer(offer.id);
+                    };
+                    actionCell.appendChild(declineButton);
+                }
+                });
+            });
+        }
+
+
+        function acceptOffer(offerId) {
+            fetch('/accept_offer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ offer_id: offerId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    fetchDatabase();  // Refresh the table
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function declineOffer(offerId) {
+            fetch('/decline_offer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ offer_id: offerId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    fetchDatabase();  // Refresh the table
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        // Refresh the current year and season every 3 seconds
+        setInterval(fetchCurrentYearAndSeason, 3000);
+    </script>
+</body>
+</html>

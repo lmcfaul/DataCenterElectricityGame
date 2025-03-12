@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Center</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        .main-content, .timeline {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            padding: 20px;
+        }
+        .main-content {
+            flex: 3;
+            min-width: 600px;
+        }
+        .timeline {
+            flex: 1;
+            min-width: 200px;
+            border-left: 4px solid #4CAF50;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], textarea, select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f4f4f9;
+            cursor: pointer;
+        }
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        ul li.current {
+            background-color: #4CAF50;
+            color: white;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <h1>Data Center</h1>
+            
+            <label>User ID:</label>
+            <input type="text" id="user_id" placeholder="Enter ID" value="{{ name }}" readonly><br>
+
+
+            <p>Electricity Market Auction Fee Potential Range per MW: 40-83</p>
+            <p>Fee Per Side Deal per MW: <span id="fee_per_side_deal_mw"></span></p>
+            <p>Fee Per MW in Electricity Auction Market in the Most Recent Season: <span id="fee_per_mw"></span></p>
+
+            <h2>Electricity Procurement Plan</h2>
+            <table id="procurement_plan_table">
+                <tr>
+                    <th>Data Center</th>
+                    <th>Year</th>
+                    <th>Electricity Procurement Plan</th>
+                    <th>Price (per MWh)</th>
+                    <th>Price with fees (per MWh)</th>
+                </tr>
+                <tr>
+                    <td>Data Center 1</td>
+                    <td id="year_dc1">1</td>
+                    <td id="plan_dc1">electricity auction market</td>
+                    <td id="price_dc1">TBD</td>
+                    <td id="price_dc1_with_fee">TBD</td>
+                </tr>
+                <tr>
+                    <td>Data Center 2</td>
+                    <td id="year_dc2">1</td>
+                    <td id="plan_dc2">electricity auction market</td>
+                    <td id="price_dc2">TBD</td>
+                    <td id="price_dc2_with_fee">TBD</td>
+                </tr>
+            </table>
+
+            <h2>Submit Offer</h2>
+            <form action="/submit_offer" method="post">
+                <button type="button" onclick="refreshProducers()">Refresh Producers</button><br>
+                <input type="hidden" name="user_id_datacenter" value="{{ name }}">
+                <label for="user_id_producer">Producer ID:</label>
+                <select id="user_id_producer" name="user_id_producer" required>
+                    <option value="">Select a producer</option>
+                </select><br>
+                <label for="year">Year:</label>
+                <input type="number" id="year" name="year" readonly><br>
+                <label for="price">Price per MWh:</label>
+                <input type="number" id="price" name="price" step="0.01" required><br>
+                <label for="message">Message (under 50 characters):</label>
+                <textarea id="message" name="message" required></textarea><br>
+                <button type="submit">Submit Offer</button>
+            </form>
+
+            <h2>Submitted Offers</h2>
+            <table id="offers_table">
+                <tr>
+                    <th>Producer ID</th>
+                    <th>Year</th>
+                    <th>Price</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </table>
+
+            <h2>Clearing Prices</h2>
+            <table id="clearing_prices_table">
+                <tr>
+                    <th>Year</th>
+                    <th>Season</th>
+                    <th>Period 1</th>
+                    <th>Period 2</th>
+                    <th>Period 3</th>
+                    <th>Period 4</th>
+                </tr>
+            </table>
+
+            <h2>Electricity Costs</h2>
+            <table id="electricity_costs_table">
+                <tr>
+                    <th>Data Center ID</th>
+                    <th>Electricity Costs</th>
+                </tr>
+            </table>
+            
+
+        </div>
+        <div class="timeline">
+            <h2>Timeline</h2>
+            <ul id="timeline">
+                <li>Year 1 - Summer</li>
+                <li>Year 1 - Winter</li>
+                <li>Year 2 - Summer</li>
+                <li>Year 2 - Winter</li>
+                <li>Year 3 - Summer</li>
+                <li>Year 3 - Winter</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+
+        p1 = 0;
+        p1f = 0;
+        p2 = 0;
+        p2f = 0;
+        epp1 = "";
+        epp2 = "";
+        year1 = 0;
+        year2 = 0;
+
+        function submitBid() {
+            var user_id = document.getElementById("user_id").value;
+            var bid_amount = document.getElementById("bid_amount").value;
+            // Implement the submit bid functionality here
+        }
+
+        function fetchDatabase() {
+            fetch('/get_database')
+                .then(response => response.json())
+                .then(data => {
+                    var global_state = data.global_state;
+                    document.getElementById("year").value = global_state.current_year;
+
+                    var timeline = document.getElementById("timeline");
+                    var items = timeline.getElementsByTagName("li");
+
+                    // Clear current highlight
+                    for (var i = 0; i < items.length; i++) {
+                        items[i].classList.remove("current");
+                    }
+
+                    // Highlight the current period
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i].innerText === `Year ${global_state.current_year} - ${global_state.current_season}`) {
+                            items[i].classList.add("current");
+                            break;
+                        }
+                    }
+
+
+                    // Set the global variables
+                    document.getElementById("fee_per_side_deal_mw").innerText = data.global_prices.fee_per_side_deal_MW;
+                    document.getElementById("fee_per_mw").innerText = data.global_prices.fee_per_MW;
+
+
+                    // Fetch and populate the procurement plan table
+                    var plans = data.data_center_plans;
+                    var global_prices = data.global_prices;
+                    if (!global_prices) {
+                    console.error("global_prices is undefined");
+                    return;
+                    }
+
+                    var electricity_price = global_prices.electricity_price;
+                    var electricity_price_with_fee = data.global_prices.electricity_price_with_fee;
+                    var fee_side_deal = data.global_prices.fee_per_side_deal_MW;
+                    p1 = electricity_price;
+                    p1f = electricity_price_with_fee;
+                    p2 = electricity_price;
+                    p2f = electricity_price_with_fee;
+                    epp1 = "electricity auction market";
+                    epp2 = "electricity auction market";
+                    year1 = global_state.current_year;
+                    year2 = global_state.current_year;
+
+                    plans.forEach(function(plan) {
+                        var dataCenterId = plan.user_id;
+                        if (dataCenterId === document.getElementById("user_id").value) {
+                            if (plan.deals === 2) {
+                                epp1 = plan.plan;
+                                epp2 = plan.plan;
+                                p1 = plan.price1;
+                                p2 = plan.price2;
+                                p1f = (plan.price1 + fee_side_deal);
+                                p2f = (plan.price2 + fee_side_deal);
+                            } else if (plan.deals === 1) {
+                                epp1 = plan.plan;
+                                p1 = plan.price1;
+                                p1f = (plan.price1 + fee_side_deal)
+                            }
+                        }
+                    });
+                    
+
+                    var procurement_plan_table = document.getElementById("procurement_plan_table");
+                    procurement_plan_table.innerHTML = `
+                        <tr>
+                            <th>Data Center</th>
+                            <th>Year</th>
+                            <th>Electricity Procurement Plan</th>
+                            <th>Price 1 (per MWh)</th>
+                            <th>Price with fees (per MWh)</th>
+                        </tr>
+                    `; // Clear existing rows
+
+                    var row1 = procurement_plan_table.insertRow();
+                    row1.insertCell(0).innerText = "Data Center 1";
+                    row1.insertCell(1).innerText = global_state.current_year;
+                    row1.insertCell(2).innerText = epp1;
+                    row1.insertCell(3).innerText = p1;
+                    row1.insertCell(4).innerText = p1f;
+
+                    var row2 = procurement_plan_table.insertRow();
+                    row2.insertCell(0).innerText = "Data Center 2";
+                    row2.insertCell(1).innerText = global_state.current_year;
+                    row2.insertCell(2).innerText = epp2;
+                    row2.insertCell(3).innerText = p2;
+                    row2.insertCell(4).innerText = p2f;
+                    //print p2 to console
+
+
+
+                    // Fetch and populate the offers table
+                    var user_id = document.getElementById("user_id").value;
+                    var offers = data.offers.filter(offer => offer.user_id_datacenter === user_id);
+                    var offers_table = document.getElementById("offers_table");
+                    offers_table.innerHTML = `
+                        <tr>
+                            <th>Producer ID</th>
+                            <th>Year</th>
+                            <th>Price</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    `; // Clear existing rows
+                    offers.forEach(offer => {
+                        var row = offers_table.insertRow();
+                        row.insertCell(0).innerText = offer.user_id_producer;
+                        row.insertCell(1).innerText = offer.year;
+                        row.insertCell(2).innerText = offer.price;
+                        row.insertCell(3).innerText = offer.message;
+                        row.insertCell(4).innerText = offer.status;
+                        var actionCell = row.insertCell(5);
+                        if (offer.status === "pending") {
+                            var revokeButton = document.createElement("button");
+                            revokeButton.innerText = "Revoke Offer";
+                            revokeButton.onclick = function() {
+                                revokeOffer(offer.id);
+                            };
+                            actionCell.appendChild(revokeButton);
+                        }
+                    });
+
+
+                    // Fetch and populate the clearing prices table
+                    var clearing_prices_table = document.getElementById("clearing_prices_table");
+                    clearing_prices_table.innerHTML = `
+                        <tr>
+                            <th>Year</th>
+                            <th>Season</th>
+                            <th>Period 1</th>
+                            <th>Period 2</th>
+                            <th>Period 3</th>
+                            <th>Period 4</th>
+                        </tr>
+                    `;  // Reset table headers
+
+                    var prices = {};
+                    data.prices.forEach(function(price) {
+                        var key = `${price.year}-${price.season}`;
+                        if (!prices[key]) {
+                            prices[key] = { period_1: "", period_2: "", period_3: "", period_4: "" };
+                        }
+                        prices[key][`period_${price.period}`] = `$${price.price} per MW`;
+                    });
+
+                    for (var key in prices) {
+                        var row = clearing_prices_table.insertRow();
+                        var [year, season] = key.split("-");
+                        row.insertCell(0).innerText = year;
+                        row.insertCell(1).innerText = season;
+                        row.insertCell(2).innerText = prices[key].period_1;
+                        row.insertCell(3).innerText = prices[key].period_2;
+                        row.insertCell(4).innerText = prices[key].period_3;
+                        row.insertCell(5).innerText = prices[key].period_4;
+                    }
+
+                     // Fetch and populate the electricity costs table
+                     var electricity_costs_table = document.getElementById("electricity_costs_table");
+                    electricity_costs_table.innerHTML = `
+                        <tr>
+                            <th>Data Center ID</th>
+                            <th>Electricity Costs</th>
+                        </tr>
+                    `;  // Reset table headers
+
+                    data.data_center_costs.forEach(function(cost) {
+                        var row = electricity_costs_table.insertRow();
+                        row.insertCell(0).innerText = cost.user_id;
+                        row.insertCell(1).innerText = cost.electricity_cost;
+                    });
+
+                });
+        }
+
+        function revokeOffer(offerId) {
+            fetch('/revoke_offer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ offer_id: offerId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    fetchDatabase();  // Refresh the table
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        // refreshProducers for dropdown list
+        function refreshProducers() {
+            fetch('/get_producers')
+                .then(response => response.json())
+                .then(producers => {
+                    var producer_select = document.getElementById("user_id_producer");
+                    producer_select.innerHTML = '<option value="">Select a producer</option>'; // Clear existing options
+                    producers.forEach(producer => {
+                        var option = document.createElement("option");
+                        option.value = producer.user_id;
+                        option.innerText = producer.user_id;
+                        producer_select.appendChild(option);
+                    });
+                });
+        }
+
+        // Refresh the data every 3 seconds
+        setInterval(fetchDatabase, 3000);
+
+        fetchDatabase();
+    </script>
+</body>
+</html>

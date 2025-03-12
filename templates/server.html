@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Dashboard</title>
+    <script>
+        function fetchDatabase() {
+            fetch('/get_database')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Database data:", data);
+                    // You can add code here to display the database data if needed
+                    display_profits();
+                    display_prices();
+                });
+        }
+
+        function display_profits() {
+            fetch('/get_equilibrium_and_profits')
+                .then(response => response.json())
+                .then(data => {
+                    var profits = data.profits;
+                    var profitsList = '<h2>Profits</h2><ul>';
+                    for (var user in profits) {
+                        profitsList += `<li>${user}: $${profits[user]}</li>`;
+                    }
+                    profitsList += '</ul>';
+                    document.getElementById("profits").innerHTML = profitsList;
+                });
+        }
+
+        function display_prices() {
+            fetch('/get_equilibrium_and_profits')
+                .then(response => response.json())
+                .then(data => {
+                    var equilibriumPrices = data.equilibrium_prices;
+                    var pricesList = `
+                        <h2>Equilibrium Prices</h2>
+                        <ul>
+                            <li>Period 1: $${equilibriumPrices[1]}</li>
+                            <li>Period 2: $${equilibriumPrices[2]}</li>
+                            <li>Period 3: $${equilibriumPrices[3]}</li>
+                            <li>Period 4: $${equilibriumPrices[4]}</li>
+                        </ul>
+                    `;
+                    document.getElementById("equilibrium_prices").innerHTML = pricesList;
+                });
+        }
+
+        function updateYearAndSeason() {
+            console.log("Button clicked: Fetching /update_year_and_season");
+            fetch('/update_year_and_season')
+                .then(response => response.text())
+                .then(data => {
+                    console.log("Update Year and Season Response:", data);
+                    fetchDatabase();  // Refresh the database contents to reflect the changes
+                });
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <h1>Server Dashboard</h1>
+            
+            <h2>Global Variables</h2>
+            <p>Year: <span id="year">{{ current_year }}</span></p>
+            <p>Season: <span id="season">{{ current_season }}</span></p>
+
+            <button onclick="updateYearAndSeason()">Update Year and Season</button>
+
+            <h2>Connected Producers</h2>
+            <ul id="producers_list"></ul>
+
+            <h2>Connected Data Centers</h2>
+            <ul id="data_centers_list"></ul>
+
+            <div id="equilibrium_prices"></div>
+            <div id="profits"></div>
+        </div>
+    </div>
+
+    <script>
+        var socket = io.connect("http://10.35.49.20:5001");
+
+        // Listen for year and season updates
+        socket.on("update_year_and_season", function(data) {
+            console.log("Received update_year_and_season event:", data);
+            document.getElementById("year").innerText = data.year;
+            document.getElementById("season").innerText = data.season;
+        });
+
+        // Listen for updates on connected users
+        socket.on("update_connected_users", function(data) {
+            var producers_list = document.getElementById("producers_list");
+            var data_centers_list = document.getElementById("data_centers_list");
+
+            producers_list.innerHTML = "";  // Clear list
+            data_centers_list.innerHTML = "";  // Clear list
+
+            data.producers.forEach(function(producer) {
+                var li = document.createElement("li");
+                li.innerText = producer;
+                producers_list.appendChild(li);
+            });
+
+            data.data_centers.forEach(function(data_center) {
+                var li = document.createElement("li");
+                li.innerText = data_center;
+                data_centers_list.appendChild(li);
+            });
+        });
+    </script>
+</body>
+</html>

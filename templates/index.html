@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Market Role Selection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .images {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .images {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .images img {
+            max-width: 500px; /* Adjust the max-width to make the images larger */
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Power Market Experiment</h1>
+        
+        <label>Name:</label>
+        <input type="text" id="name" placeholder="Enter your name"><br>
+
+        <button onclick="selectRole('producer')">Electricity Producer</button>
+        <button onclick="selectRole('data_center')">Data Center</button>
+    </div>
+
+    <div class="images">
+        <img src="{{ url_for('static', filename='images/System_diagram.jpg') }}" alt="Image 1">
+    </div>
+
+    <script>
+        function selectRole(role) {
+            var name = document.getElementById("name").value;
+            if (name === "") {
+                alert("Please enter your name.");
+                return;
+            }
+            window.location.href = "/" + role + "?name=" + encodeURIComponent(name);
+        }
+    </script>
+</body>
+</html>
