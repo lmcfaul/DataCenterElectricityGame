@@ -383,6 +383,11 @@ def submit_offer():
     if accepted_offers >= 2:
         return jsonify({"status": "error", "message": "Data center already has two accepted offers for the current year"})
 
+
+    if current_year == 1:
+        return jsonify({"status": "error", "message": "Data center can't make offers in year 1"})
+    
+    
     offer = OfferedDeals(
         id=generate_offer_id(),
         user_id_datacenter=user_id_datacenter,
