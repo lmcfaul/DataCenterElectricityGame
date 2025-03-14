@@ -387,7 +387,7 @@ def submit_offer():
     if current_year == 1:
         return jsonify({"status": "error", "message": "Data center can't make offers in year 1"})
     
-    
+
     offer = OfferedDeals(
         id=generate_offer_id(),
         user_id_datacenter=user_id_datacenter,
@@ -640,7 +640,7 @@ def calculate_equilibrium_and_profits():
         producer = ConnectedUser.query.filter_by(user_id=offer.user_id_producer).first()
         data_center = ConnectedUser.query.filter_by(user_id=offer.user_id_datacenter).first()
         if producer and data_center:
-            producer.profits += offer.price * 100
+            producer.profits += offer.price * 400
             db.session.add(producer)
     db.session.commit()
 
@@ -648,7 +648,7 @@ def calculate_equilibrium_and_profits():
     producers = ConnectedUser.query.filter_by(role='producer').all()
     for producer in producers:
         accepted_offers = OfferedDeals.query.filter_by(user_id_producer=producer.user_id, year=current_year, status="accepted").count()
-        production_cost = [0,10,12.5,26.67,42.5,52]
+        production_cost = [0,10,17.5,26.67,42.5,52]
         producer.profits -= production_cost[accepted_offers] * (100*accepted_offers)
         db.session.add(producer)
         db.session.commit()

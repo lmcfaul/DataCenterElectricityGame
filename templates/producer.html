@@ -97,6 +97,40 @@
         .decline-button:hover {
             background-color: #e53935;
         }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -231,7 +265,86 @@
         </div>
     </div>
 
+    <!-- Modal for Instructions -->
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Instructions for Producers in the Power Market Experiment</h2>
+            <p>Welcome to the Power Market Experiment! Below are the detailed instructions and explanations for each aspect of the game. You and 3 other electricity producers and 3 data center owners will compete to maximize your respective profits by strategically managing electricity production and procurement. Your decisions will impact the market dynamics and your success in the game. Here’s how you can navigate through the game:</p>
+            <h3>1. Objective:</h3>
+            <p>Your primary objective is to sell electricity at the highest possible price while ensuring you remain competitive in the market.</p>
+            <h3>2. Game Phases:</h3>
+            <p>The game is divided into multiple years and seasons. Each year has two seasons: Summer and Winter. Your actions and decisions will impact your performance in each season.</p>
+            <ul>
+                <li><strong>Year 1:</strong> You must sell electricity through the auction market.</li>
+                <li><strong>Year 2 and Beyond:</strong> You have the option to sell electricity through both the auction market and side deals with data centers.</li>
+            </ul>
+            <h3>3. Electricity Sales:</h3>
+            <p>As a producer, you cannot submit offers to data centers. Instead, you will receive offers from data centers and decide whether to accept or decline them.</p>
+            <ul>
+                <li><strong>Accept Offer:</strong> You can accept offers from data centers to sell electricity at the offered price.</li>
+                <li><strong>Decline Offer:</strong> You can decline offers that do not meet your requirements or are too low.</li>
+            </ul>
+            <h3>4. Marginal Cost of Plants:</h3>
+            <p>You own 5 power plants, each with a different marginal cost of production. The marginal cost is the cost to produce one additional unit (MW) of electricity. Your goal is to sell electricity at a price higher than the marginal cost to make a profit.</p>
+            <ul>
+                <li><strong>Plant 1:</strong> Marginal Cost = $10/MWh</li>
+                <li><strong>Plant 2:</strong> Marginal Cost = $25/MWh</li>
+                <li><strong>Plant 3:</strong> Marginal Cost = $45/MWh</li>
+                <li><strong>Plant 4:</strong> Marginal Cost = $90/MWh</li>
+                <li><strong>Plant 5:</strong> Marginal Cost = $90/MWh</li>
+            </ul>
+            <h3>5. Electricity Prices:</h3>
+            <p><strong>Accepted Offers:</strong> The revenue from accepted offers is calculated based on the offer price.</p>
+            <p><strong>Auction Prices:</strong> If your offers are not accepted, your electricity will be sold at the auction clearing price.</p>
+            <h3>6. Demand for Each Period:</h3>
+            <p>The demand for electricity varies in each period. You need to plan your production and offers accordingly.</p>
+            <ul>
+                <li><strong>Period 1:</strong> 800 MW</li>
+                <li><strong>Period 2:</strong> 1200 MW</li>
+                <li><strong>Period 3:</strong> 1600 MW</li>
+                <li><strong>Period 4:</strong> 1000 MW</li>
+            </ul>
+            <h3>7. Game Interface:</h3>
+            <p><strong>Bids: </strong> Offer bids for each of your power plants for each period in a season.</p>
+            <p><strong>Offers Table:</strong> Review and manage offers from data centers.</p>
+            <p><strong>Prices:</strong> Monitor the electricity prices and fees.</p>
+            <h3>Tips for Success:</h3>
+            <p><strong>Compare Prices:</strong> Always compare your offer prices to the auction clearing price to remain competitive.</p>
+            <p><strong>Plan Ahead:</strong> Anticipate the demand for each period and plan your production and sales strategy accordingly.</p>
+            <p><strong>Manage Offers:</strong> Focus on accepting competitive offers to maximize your revenue.</p>
+            <p>By following these instructions and strategies, you can effectively manage your electricity production and achieve success in the Power Market Experiment. Good luck!</p>
+        </div>
+    </div>
+
+    <button onclick="showModal()">Show Instructions</button>
+
     <script>
+        // Get the modal
+        var modal = document.getElementById("instructionsModal");
+
+        // Show the modal
+        function showModal() {
+            modal.style.display = "block";
+        }
+
+        // Close the modal
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        // Show the modal when the page loads
+        window.onload = function() {
+            showModal();
+        }
+
+        // Close the modal when the user clicks outside of it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
         var socket = io.connect("http://10.35.49.20:5001");
 
         function submitBids() {

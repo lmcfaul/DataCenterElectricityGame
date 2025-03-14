@@ -89,6 +89,38 @@
         button:hover {
             background-color: #45a049;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -99,10 +131,9 @@
             <label>User ID:</label>
             <input type="text" id="user_id" placeholder="Enter ID" value="{{ name }}" readonly><br>
 
-
-            <p>Electricity Market Auction Fee Potential Range per MW: 40-83</p>
-            <p>Fee Per Side Deal per MW: <span id="fee_per_side_deal_mw"></span></p>
-            <p>Fee Per MW in Electricity Auction Market in the Most Recent Season: <span id="fee_per_mw"></span></p>
+            <p>Electricity Market Auction Fee Potential Range per MWh: 40-83</p>
+            <p>Fee Per Side Deal per MWh: <span id="fee_per_side_deal_mw"></span></p>
+            <p>Fee Per MWh in Electricity Auction Market in the Most Recent Season: <span id="fee_per_mw"></span></p>
 
             <h2>Electricity Procurement Plan</h2>
             <table id="procurement_plan_table">
@@ -177,8 +208,6 @@
                     <th>Electricity Costs</th>
                 </tr>
             </table>
-            
-
         </div>
         <div class="timeline">
             <h2>Timeline</h2>
@@ -193,16 +222,60 @@
         </div>
     </div>
 
-    <script>
+    <button onclick="document.getElementById('instructionsModal').style.display='block'">Show Instructions</button>
 
-        p1 = 0;
-        p1f = 0;
-        p2 = 0;
-        p2f = 0;
-        epp1 = "";
-        epp2 = "";
-        year1 = 0;
-        year2 = 0;
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('instructionsModal').style.display='none'">&times;</span>
+            <h2>Instructions for Data Centers in the Power Market Experiment</h2>
+            <p>Welcome to the Power Market Experiment! You and 2 other data center owners and 4 electricity producers will compete to maximize your respective profits by strategically managing electricity production and procurement. Your decisions will impact the market dynamics and your success in the game. Here’s how you can navigate through the game:</p>
+            <ol>
+                <li><strong>Objective:</strong> Your primary objective is to procure electricity at the lowest possible cost for your two data centers.</li>
+                <li><strong>Game Phases:</strong> The game is divided into multiple years and seasons. Each year has two seasons: Summer and Winter. Your actions and decisions will impact your performance in each season.
+                    <ul>
+                        <li>Year 1: You must procure electricity from the auction market.</li>
+                        <li>Year 2 and Beyond: You have the option to procure electricity from both the auction market and through side deals with producers.</li>
+                        <li>Year 3: Procuring electricity directly from producers will result in a “disconnection fee” of $50 per MWh.</li>
+                    </ul>
+                </li>
+                <li><strong>Electricity Procurement:</strong> As a data center, you can only send offers to power plants (producers).
+                    <ul>
+                        <li>Submit Offer: You will submit offers to producers. Each offer includes a price per MWh and a message.</li>
+                        <li>Revoke Offer: You can revoke offers that you have submitted if they are not yet accepted by the producer.</li>
+                    </ul>
+                </li>
+                <li><strong>Electricity Costs:</strong>
+                    <ul>
+                        <li>Accepted Offers: The cost of electricity from accepted offers is calculated based on the offer price plus any applicable fees.</li>
+                        <li>Auction prices: When procuring electricity from the auction market, your electricity cost will be the market clearing price added with an additional fee accounting for ancillary charges. The ancillary service fee will be split among all participating consumers of the auction market. The more data centers that contract producers, the higher this fee will rise.</li>
+                    </ul>
+                </li>
+                <li><strong>Game Interface:</strong>
+                    <ul>
+                        <li>Dashboard: View your current status, including accepted offers, electricity costs, and profits.</li>
+                        <li>Offers Table: Review and manage offers to producers.</li>
+                        <li>Prices: Monitor the electricity prices and fees.</li>
+                    </ul>
+                </li>
+                <li><strong>Actions:</strong>
+                    <ul>
+                        <li>Submit Offer: You will submit offers to producers. Each offer includes a price per MWh and a message.</li>
+                        <li>Revoke Offer: You can revoke offers that you have submitted if they are not yet accepted by the producer.</li>
+                        <li>You may complete up to two offers per year, one for each data center.</li>
+                    </ul>
+                </li>
+                <li>The game progresses through the years and seasons. Ensure you are prepared for each new season by reviewing your procurement strategy.</li>
+                <li>Always compare electricity prices and fees to potential side deals you can make.</li>
+            </ol>
+            <p>By following these instructions and strategies, you can effectively manage your data center's electricity procurement and achieve success in the Power Market Experiment. Good luck!</p>
+        </div>
+    </div>
+
+    <script>
+        // Show the modal when the page loads
+        window.onload = function() {
+            document.getElementById('instructionsModal').style.display = 'block';
+        };
 
         function submitBid() {
             var user_id = document.getElementById("user_id").value;
@@ -233,18 +306,16 @@
                         }
                     }
 
-
                     // Set the global variables
                     document.getElementById("fee_per_side_deal_mw").innerText = data.global_prices.fee_per_side_deal_MW;
                     document.getElementById("fee_per_mw").innerText = data.global_prices.fee_per_MW;
-
 
                     // Fetch and populate the procurement plan table
                     var plans = data.data_center_plans;
                     var global_prices = data.global_prices;
                     if (!global_prices) {
-                    console.error("global_prices is undefined");
-                    return;
+                        console.error("global_prices is undefined");
+                        return;
                     }
 
                     var electricity_price = global_prices.electricity_price;
@@ -276,7 +347,6 @@
                             }
                         }
                     });
-                    
 
                     var procurement_plan_table = document.getElementById("procurement_plan_table");
                     procurement_plan_table.innerHTML = `
@@ -302,9 +372,6 @@
                     row2.insertCell(2).innerText = epp2;
                     row2.insertCell(3).innerText = p2;
                     row2.insertCell(4).innerText = p2f;
-                    //print p2 to console
-
-
 
                     // Fetch and populate the offers table
                     var user_id = document.getElementById("user_id").value;
@@ -338,7 +405,6 @@
                         }
                     });
 
-
                     // Fetch and populate the clearing prices table
                     var clearing_prices_table = document.getElementById("clearing_prices_table");
                     clearing_prices_table.innerHTML = `
@@ -358,7 +424,7 @@
                         if (!prices[key]) {
                             prices[key] = { period_1: "", period_2: "", period_3: "", period_4: "" };
                         }
-                        prices[key][`period_${price.period}`] = `$${price.price} per MW`;
+                        prices[key][`period_${price.period}`] = `$${price.price} per MWh`;
                     });
 
                     for (var key in prices) {
